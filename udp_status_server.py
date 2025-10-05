@@ -35,12 +35,34 @@ def get_hardware_info():
         "Processor": platform.processor()
     }
 
+def get_processes(limit=10):
+    processes = []
+    for proc in psutil.process_iter(['pid', 'name', 'username']):
+        processes.append(proc.info)
+    return processes[:limit]
+
+def get_network_info(limit=10):
+    connections = psutil.net_connections(kind='inet')
+    net_info = []
+    for c in connections[:limit]:
+        laddr = f"{c.laddr.ip}:{c.laddr.port}" if c.laddr else ""
+        raddr = f"{c.raddr.ip}:{c.raddr.port}" if c.raddr else ""
+        net_info.append({
+            "PID": c.pid,
+            "Local Address": laddr,
+            "Remote Address": raddr,
+            "Status": c.status
+        })
+    return net_info
+
 def build_report():
     report = []
     report.append(f"Uptime: {get_uptime()}")
     report.append(f"CPU: {get_cpu_info()}")
     report.append(f"Memory: {get_memory_info()}")
     report.append(f"Hardware: {get_hardware_info()}")
+    report.append(f"Processes (top 10): {get_processes()}")
+    report.append(f"Network Connections (top 10): {get_network_info()}")
     return "\n".join(report)
 
 # ================== UDP Server ==================
